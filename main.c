@@ -81,7 +81,7 @@ team_t *create_team(char *name, char *players, player_t *p_head){
             players += strlen(p_name) + 2;      // p_name + ", "
         }
         else{
-						/* last name */
+	    /* last name */
             sscanf(players, "%s", p_name);
             flag = 0;
         }
@@ -90,7 +90,7 @@ team_t *create_team(char *name, char *players, player_t *p_head){
         current_player->next = tmp_head;
         tmp_head = current_player;
     }
-		/* Setting team's starting player pointer */
+    /* Setting team's starting player pointer */
     new_team->next_player = current_player;
     free(current_player);
 		
@@ -138,21 +138,21 @@ void file_check(FILE* file, char *name){
 int main(int argc, char** argv) {
 
     /* Open the players file and check if it is available. */
-			char players_file[] = "players.txt";
-			char teams_file[] = "teams.txt";
-			FILE *file = fopen(players_file, "r");
+	char players_file[] = "players.txt";
+	char teams_file[] = "teams.txt";
+    FILE *file = fopen(players_file, "r");
     file_check(file, players_file);
     /* list inits */
-			player_t *p_head = NULL;
-			player_t *p_tmp;
-			team_t *t_head = NULL;
-			team_t *t_tmp;
+	player_t *p_head = NULL;
+	player_t *p_tmp;
+	team_t *t_head = NULL;
+	team_t *t_tmp;
     /* var inits */
-			char buffer[30];
-			int line_length = sizeof(buffer) - 1;
-			char name[sizeof(p_head->name)];
-			char team_players[100];
-			int goal;
+	char buffer[30];
+	int line_length = sizeof(buffer) - 1;
+	char name[sizeof(p_head->name)];
+	char team_players[100];
+	int goal;
     
     /* Processing players data */
     while(fgets(buffer, line_length, file)){
