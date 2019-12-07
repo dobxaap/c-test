@@ -58,7 +58,7 @@ player_t *get_player_w_name(player_t *head, char* name){
     player_t *seeker = head;
     while(seeker != NULL){
         if (strcmp(seeker->name, name) == 0) {
-            return seeker;
+            return create_player(seeker->name,seeker->goals);
         }
         seeker = seeker->next;
     }
