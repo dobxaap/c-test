@@ -1,3 +1,8 @@
+
+# Created by https://www.gitignore.io/api/netbeans,c
+# Edit at https://www.gitignore.io/?templates=netbeans,c
+
+### C ###
 # Prerequisites
 *.d
 
@@ -50,3 +55,15 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+### NetBeans ###
+**/nbproject/private/
+**/nbproject/Makefile-*.mk
+**/nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# End of https://www.gitignore.io/api/netbeans,c
