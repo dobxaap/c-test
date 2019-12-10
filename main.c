@@ -19,11 +19,9 @@ typedef struct player{
 typedef struct group{
     char name[20];
     struct player* next_player;
-    struct stats stat;
     struct group* next;
+    struct stats stat;
 }team_t;
-
-
 
 /*
  * Expected input
@@ -72,7 +70,7 @@ player_t *get_player_w_name(player_t *head, char* name){
 
 team_t *create_team(char *name, char *players, player_t *p_head){
     team_t *new_team = malloc(sizeof(team_t));
-    player_t *tmp_head = NULL;
+    player_t *tmp_pl_head = NULL;
     player_t *current_player = malloc(sizeof(player_t));
     /* Set the name of the team. */
     strlcpy(new_team->name, name, sizeof(name));
@@ -91,13 +89,12 @@ team_t *create_team(char *name, char *players, player_t *p_head){
         }
         /* To a func?(rec) */
         current_player = get_player_w_name(p_head, p_name);
-        current_player->next = tmp_head;
-        tmp_head = current_player;
+        current_player->next = tmp_pl_head;
+        tmp_pl_head = current_player;
     }
     /* Setting team's starting player pointer */
     new_team->next_player = current_player;
-    
-    free(current_player);		
+    		
     return new_team;
 }
 
@@ -106,48 +103,56 @@ void create_team_link(team_t **head, team_t *new_node){
     *head = new_node;
 }
 
-int get_max_goals(team_t *head){
+void get_max_goals(team_t *head){
     player_t *seeker = malloc(sizeof(player_t));
     seeker = head->next_player;
     int max = 0;
     while(seeker != NULL){
         if(seeker->goals > max){
-            max = seeker->goals;
+            head->stat.max = seeker->goals;
             head->stat.player_name = seeker->name;
+            max = seeker->goals;
         }
         seeker = seeker->next;
     }
     free(seeker);
-    return max;
 }
 
 float get_average_goals(team_t *t_head){
-        team_t *team = malloc(sizeof(team_t));
-        team = t_head;
-        player_t *player = NULL;
-
+        player_t *player = malloc(sizeof(player_t));
+        player = t_head->next_player;
         int num_of_players = 0;
         int sum_goals = 0;
         float result = 0;
     
-    while(team->next_player != NULL){
-        sum_goals += team->next_player->goals; 
-        player = team->next_player->next;
-        team = team->next_player;       // ???
+    while(player != NULL){
+        sum_goals += player->goals; 
+        player = player->next;
         num_of_players++;
     }
     /* x/0 is bad! */
     if(num_of_players != 0){
         result = sum_goals / (float)num_of_players;
     }
-    free(team);
     return result;
 }
 
 void avg_max_dif(team_t *head){    
     head->stat.avg = get_average_goals(head);
-    head->stat.max = get_max_goals(head);
+    get_max_goals(head);
     head->stat.diff = head->stat.max - head->stat.avg;
+}
+
+void print_stats_for_all(team_t *head){
+    team_t *seeker = malloc(sizeof(team_t));
+    seeker = head;
+    while(seeker != NULL){
+        avg_max_dif(seeker);
+        printf("Team: %s\nAverage goals: %5.2f\nBest player is %s with %d goals, which is %5.2f points away from the average of this team\n\n" ,
+                seeker->name, seeker->stat.avg, 
+                seeker->stat.player_name, seeker->stat.max, seeker->stat.diff);
+        seeker = seeker->next;
+    }
 }
 
 /* Terminate the program if file is missing */
@@ -172,10 +177,10 @@ int main(int argc, char** argv) {
 	team_t *t_head = NULL;
 	team_t *t_tmp;
     /* var inits */
-	char buffer[30];
+	char buffer[50];
 	int line_length = sizeof(buffer);
 	char name[sizeof(p_head->name)];
-	char team_players[100];
+	char team_players[sizeof(buffer)];
 	int goal;
     
     /* Processing players data */
@@ -194,22 +199,17 @@ int main(int argc, char** argv) {
     
     /* Processing team data */
     file = fopen(teams_file, "r");
-    file_check(file, teams_file);
-    
-    while(fgets(buffer, line_length, file)){
+    file_check(file, teams_file);;
+    while(fgets(buffer, line_length, file)){       
 	/* %[^:]: = name of team, %[^\n]\n -> player names */
         sscanf(buffer, "%[^:]: %[^\n]\n", name, team_players);
         t_tmp = create_team(name, team_players, p_head);
-        
-        create_team_link(&t_head, t_tmp); /* return to what? */
+        create_team_link(&t_head, t_tmp);
     }
-    /* Calc average goals for a team wip */
-    avg_max_dif(t_head);
-    printf("Team: %s\nAvg goals:%f \nMax: %d by %s \nDiff: %f\n", 
-    t_head->name,  t_head->stat.avg, t_head->stat.max, 
-    t_head->stat.player_name,  t_head->stat.diff);
-    /* /wip */
+    /* t1: Calc stats for each team */
+    print_stats_for_all(t_head);
+     
     fclose(file);
-    printf("File: %s\nDate: %s\nTime: %s", __FILE__, __DATE__, __TIME__);
+    printf("File: %s\nDate: %s\nTime: %s\n", __FILE__, __DATE__, __TIME__);
     return (EXIT_SUCCESS);
 }
