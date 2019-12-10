@@ -8,6 +8,7 @@ struct stats{
     char *player_name;
     float avg;
     float diff;
+    int sum_goals;
 };
 
 typedef struct player{
@@ -48,7 +49,6 @@ void create_player_link(player_t **head, player_t *new_node){
     *head = new_node;
 }
 
-/* Mostly for quick debug */
 void print_players(player_t *head){
     player_t *seeker = head;
     while(seeker != NULL){
@@ -104,8 +104,7 @@ void create_team_link(team_t **head, team_t *new_node){
 }
 
 void get_max_goals(team_t *head){
-    player_t *seeker = malloc(sizeof(player_t));
-    seeker = head->next_player;
+    player_t *seeker = head->next_player;
     int max = 0;
     while(seeker != NULL){
         if(seeker->goals > max){
@@ -115,12 +114,10 @@ void get_max_goals(team_t *head){
         }
         seeker = seeker->next;
     }
-    free(seeker);
 }
 
-float get_average_goals(team_t *t_head){
-        player_t *player = malloc(sizeof(player_t));
-        player = t_head->next_player;
+float get_avg_sum_goals(team_t *t_head){
+        player_t *player = t_head->next_player;
         int num_of_players = 0;
         int sum_goals = 0;
         float result = 0;
@@ -134,25 +131,63 @@ float get_average_goals(team_t *t_head){
     if(num_of_players != 0){
         result = sum_goals / (float)num_of_players;
     }
+    t_head->stat.sum_goals = sum_goals;
     return result;
 }
 
 void avg_max_dif(team_t *head){    
-    head->stat.avg = get_average_goals(head);
+    head->stat.avg = get_avg_sum_goals(head);
     get_max_goals(head);
     head->stat.diff = head->stat.max - head->stat.avg;
 }
 
 void print_stats_for_all(team_t *head){
-    team_t *seeker = malloc(sizeof(team_t));
-    seeker = head;
+    team_t *seeker = head;
     while(seeker != NULL){
         avg_max_dif(seeker);
-        printf("Team: %s\nAverage goals: %5.2f\nBest player is %s with %d goals, which is %5.2f points away from the average of this team\n\n" ,
+        printf("Team: %s\nAverage goals: %5.2f\nBest player is %s with %d goals, which is %5.2f points away from the average of this team.\n\n" ,
                 seeker->name, seeker->stat.avg, 
                 seeker->stat.player_name, seeker->stat.max, seeker->stat.diff);
         seeker = seeker->next;
     }
+}
+
+int count_teams(team_t *head){
+    team_t *seeker = head;
+    int i = 0;
+    while(seeker != NULL){
+        printf("%d. %-8s\n", i + 1, seeker->name);
+        seeker = seeker->next;
+        i++;
+    }
+    return i;
+}
+
+int choose_teams(team_t *head, int team_num){
+    team_t *seeker = head;
+    int choice;
+    
+    do{
+        printf("Choose the number of the team(1-%d): ", team_num);
+        scanf("%d", &choice);
+    }
+    while(choice > team_num || choice < 1);    // FIXME: -> non int input
+    
+    for(int i = 1; i < choice; i++){
+        seeker = seeker->next;
+    }
+   return seeker->stat.sum_goals; 
+}
+
+void compare_teams(team_t *head){
+    int num_of_teams = count_teams(head);
+    int first = choose_teams(head, num_of_teams);
+    int second = choose_teams(head, num_of_teams);
+    float one = (first / (float)(first + second)) * 100;
+    float two = (second / (float)(first + second)) * 100;
+//    printf("Number of teams: %d\nfirst: %d\nsecond: %d\n", 
+//            num_of_teams, first, second);
+    printf("Chances for the first selected team:\nWinning: %5.2f %%\nLosing: %5.2f %%\n\n", one, two);
 }
 
 /* Terminate the program if file is missing */
@@ -194,6 +229,7 @@ int main(int argc, char** argv) {
         /* Then link it into the list */
         create_player_link(&p_head, p_tmp);
     }
+    printf("Players:\n");
     print_players(p_head);
     fclose(file);
     
@@ -206,9 +242,13 @@ int main(int argc, char** argv) {
         t_tmp = create_team(name, team_players, p_head);
         create_team_link(&t_head, t_tmp);
     }
-    /* t1: Calc stats for each team */
+    /* t1: Calc stats */
+    printf("\nStatistics of each team:\n");
     print_stats_for_all(t_head);
-     
+    
+    /* t2: Comparing teams chances */
+    compare_teams(t_head);
+    
     fclose(file);
     printf("File: %s\nDate: %s\nTime: %s\n", __FILE__, __DATE__, __TIME__);
     return (EXIT_SUCCESS);
